@@ -52,6 +52,7 @@ public class BankService {
         Bank bank = bankRepository.findById(bankId).orElseThrow(() -> new RuntimeException("Bank not found"));
         Account fromAccount = accountRepository.findById(fromAccountId).orElseThrow(() -> new RuntimeException("Originating account not found"));
         Account toAccount = accountRepository.findById(toAccountId).orElseThrow(() -> new RuntimeException("Resulting account not found"));
+        Transaction transaction = new Transaction();
 
         if (fromAccount.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Not enough funds");
@@ -63,9 +64,16 @@ public class BankService {
         bank.setTotalTransactionFeeAmount(bank.getTotalTransactionFeeAmount().add(fee));
         bank.setTotalTransferAmount(bank.getTotalTransferAmount().add(amount));
 
+        transaction.setAmount(amount);
+        transaction.setOriginatingAccountId(fromAccountId);
+        transaction.setResultingAccountId(toAccountId);
+        transaction.setTransactionReason(reason);
+
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
         bankRepository.save(bank);
+        transactionRepository.save(transaction);
+
 
         return String.format("The transfer of $%.2f is made from %s to %s with this reason: %s",
                 amount, fromAccount.getUserName(), toAccount.getUserName(), reason);
